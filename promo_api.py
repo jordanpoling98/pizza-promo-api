@@ -39,16 +39,12 @@ def remove_used(codes):
 @app.route('/promo-codes', methods=['GET'])
 def get_codes():
     count = int(request.args.get('count', 1))
-
-    print("📣 Endpoint hit – trying to read codes")
-
     codes = read_codes(CSV_FILE)
-
-    print(f"⚠️ Read {len(codes)} codes from {CSV_FILE}: {codes[:5]}")
 
     if not codes:
         return jsonify({"error": "No promo codes available."}), 404
 
+    print(f"📦 Previewing {count} unassigned code(s): {codes[:count]}")
     return jsonify(codes[:count])
 
 
@@ -61,10 +57,10 @@ def mark_used():
     remove_used(codes)
     return jsonify({"status": "success", "used": codes})
 
-@app.route('/promo-codes/assign', methods=['GET'])
-def assign_code():
+@app.route('/promo-codes/preview', methods=['GET'])
+def preview_codes():
     count = int(request.args.get('count', 1))
-    threshold = 10  # 🔥 Adjust this number if you want alerts at a different level
+    threshold = 10
 
     codes = read_codes(CSV_FILE)
 
@@ -74,25 +70,21 @@ def assign_code():
             "action_required": "Please replenish the promo code list."
         }), 404
 
-    assigned = codes[:count]
-
-    # Mark them used
-    write_codes(USED_FILE, assigned)
-    remove_used(assigned)
+    preview = codes[:count]
 
     response = {
-        "assigned_codes": assigned
+        "preview_codes": preview
     }
 
-    if len(assigned) < count:
-        response["warning"] = f"Only {len(assigned)} promo code(s) available. Please replenish the promo code list soon."
+    if len(preview) < count:
+        response["warning"] = f"Only {len(preview)} promo code(s) available. Please replenish the promo code list soon."
 
-    # 🚨 Low inventory alert
-    remaining_codes = len(codes) - len(assigned)
+    remaining_codes = len(codes) - len(preview)
     if remaining_codes < threshold:
         response["low_inventory_alert"] = f"Only {remaining_codes} promo code(s) left. Please upload more soon."
 
     return jsonify(response)
+
 
 
 if __name__ == '__main__':

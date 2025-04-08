@@ -2,7 +2,9 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask, request, jsonify
 import os
+from datetime import datetime
 
+# Set up dynamic paths
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 CREDENTIALS_PATH = os.path.join(BASE_DIR, "credentials.json")
 
@@ -11,14 +13,13 @@ def authenticate_google_sheets():
     # Define the scope of access you need (Sheets and Drive API)
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive"]
     
-    # Authenticate with the credentials.json file
+    # Authenticate with the credentials.json file (dynamic path)
     creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, scope)
     
     # Authorize and create a client
     client = gspread.authorize(creds)
     
     return client
-
 
 app = Flask(__name__)
 

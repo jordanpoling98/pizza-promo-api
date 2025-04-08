@@ -1,7 +1,0 @@
-services:
-  - type: web
-    name: pizza-promo-api
-    env: python
-    buildCommand: ""
-    startCommand: python promo_api.py
-    plan: free

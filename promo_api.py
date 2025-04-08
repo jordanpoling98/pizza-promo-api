@@ -10,12 +10,13 @@ def authenticate_google_sheets():
     scope = ["https://spreadsheets.google.com/feeds", 'https://www.googleapis.com/auth/spreadsheets', "https://www.googleapis.com/auth/drive"]
     
     # Authenticate with the credentials.json file
-    creds = ServiceAccountCredentials.from_json_keyfile_name("C:/Users/JordanPoling/Downloads/credentials.json", scope)
+    creds = ServiceAccountCredentials.from_json_keyfile_name(CREDENTIALS_PATH, scope)
     
     # Authorize and create a client
     client = gspread.authorize(creds)
     
     return client
+
 
 app = Flask(__name__)
 

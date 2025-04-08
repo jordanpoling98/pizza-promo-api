@@ -2,7 +2,9 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask, request, jsonify
 import os
-from datetime import datetime
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+CREDENTIALS_PATH = os.path.join(BASE_DIR, "credentials.json")
 
 # Authenticate Google Sheets
 def authenticate_google_sheets():

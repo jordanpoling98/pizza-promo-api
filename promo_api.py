@@ -72,12 +72,14 @@ def mark_used():
         return jsonify({'error': 'Invalid JSON data'}), 400
 
     codes = data.get('codes', [])
-    user_id = data.get('user_id', 'anonymous')  # Default to "anonymous" if not provided
+    user_id = data.get('user_id', '')
 
-    if not isinstance(codes, list) or not codes:
-        return jsonify({'error': 'Promo codes must be a non-empty list'}), 400
+    # Debug log: Print the received user_id to Render's logs (or stdout)
+    print(f"Received user_id: {user_id}")
 
-    # Check if any are already used
+    if not user_id:
+        return jsonify({'error': 'User ID is required'}), 400
+
     for code in codes:
         if is_code_used_from_google(code):
             return jsonify({'error': f'Promo code {code} has already been used'}), 400

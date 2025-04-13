@@ -65,30 +65,24 @@ def get_codes():
     codes = read_codes_from_google()
     return jsonify(codes[:count])
 
+from flask import request, jsonify
+
 @app.route('/promo-codes/mark-used', methods=['POST'])
-def mark_used():
+def mark_promo_codes_used():
     data = request.get_json()
-    if not data:
-        return jsonify({'error': 'Invalid JSON data'}), 400
-
     codes = data.get('codes', [])
-    user_id = data.get('user_id', '')
+    user_email = data.get('user_email')  # <-- ✅ Get the email
 
-    # Debug log: Print the received user_id to Render's logs (or stdout)
-    print(f"Received user_id: {user_id}")
+    if not codes:
+        return jsonify({'error': 'No codes provided'}), 400
+    if not user_email:
+        return jsonify({'error': 'User ID (email) is required'}), 400
 
-    if not user_id:
-        return jsonify({'error': 'User ID is required'}), 400
-
+    # ✅ Optional: log or save the user_email with the codes
     for code in codes:
-        if is_code_used_from_google(code):
-            return jsonify({'error': f'Promo code {code} has already been used'}), 400
+        mark_code_as_used_in_db(code, user_email)  # Example function
 
-    write_codes_to_google(codes, user_id)
-    remove_used_from_google(codes)
-
-    return jsonify({"status": "success", "used": codes})
-
+    return jsonify({'status': 'success', 'used': codes}), 200
 
 # App entry point
 if __name__ == '__main__':

@@ -73,9 +73,7 @@ def mark_promo_codes_used():
     if not user_email:
         return jsonify({'error': 'User ID (email) is required'}), 400
 
-    # Log used codes with the email and timestamp in the Used Codes sheet
     write_codes_to_google(codes, user_email)
-    # Remove the marked codes from the available Promo_Codes sheet
     remove_used_from_google(codes)
 
     return jsonify({'status': 'success', 'used': codes}), 200

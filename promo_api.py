@@ -1,4 +1,3 @@
-import re
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from flask import Flask, request, jsonify
@@ -7,7 +6,7 @@ from datetime import datetime
 
 # Set up dynamic credentials path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CREDENTIALS_PATH = os.path.join(BASE_DIR, "credentials.json")
+CREDENTIALS_PATH = "/etc/secrets/credentials.json"
 
 def authenticate_google_sheets():
     scope = [
@@ -19,13 +18,14 @@ def authenticate_google_sheets():
     client = gspread.authorize(creds)
     return client
 
+# Flask app initialization
 app = Flask(__name__)
 
 def read_codes_from_google():
     client = authenticate_google_sheets()
     sheet = client.open('Promo_Codes').sheet1
     all_values = sheet.get_all_values()
-    # Get the first column of non-empty rows
+    # Filter out any empty rows
     codes = [row[0] for row in all_values if row and row[0]]
     return codes
 
@@ -34,6 +34,7 @@ def write_codes_to_google(codes, user_id):
     sheet = client.open('Used Codes').sheet1
     timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     for code in codes:
+        # Ensure extra whitespace is removed and then append the row
         sheet.append_row([code.strip(), user_id, timestamp])
 
 def remove_used_from_google(codes):
@@ -42,6 +43,7 @@ def remove_used_from_google(codes):
     all_values = sheet.get_all_values()
     codes_to_remove = set(codes)
     updated_codes = [row for row in all_values if row and row[0] not in codes_to_remove]
+    # Clear the sheet and write back the updated codes if any exist
     sheet.clear()
     if updated_codes:
         sheet.append_rows(updated_codes)
@@ -63,35 +65,26 @@ def get_codes():
     codes = read_codes_from_google()
     return jsonify(codes[:count])
 
+from flask import request, jsonify
+
 @app.route('/promo-codes/mark-used', methods=['POST'])
-def mark_used():
+def mark_promo_codes_used():
     data = request.get_json()
-    print("Received payload:", data)  # Debug logging
-
-    if not data:
-        return jsonify({'error': 'Invalid JSON data'}), 400
-
     codes = data.get('codes', [])
-    user_id = data.get('user_id', '').strip()
+    user_email = data.get('user_email')  # <-- ✅ Get the email
 
-    # Enforce that a user ID (which should be an email) is provided
-    if not user_id:
+    if not codes:
+        return jsonify({'error': 'No codes provided'}), 400
+    if not user_email:
         return jsonify({'error': 'User ID (email) is required'}), 400
 
-    # Basic email format validation
-    email_pattern = r"[^@]+@[^@]+\.[^@]+"
-    if not re.match(email_pattern, user_id):
-        return jsonify({'error': 'A valid email address is required as User ID'}), 400
-
+    # ✅ Optional: log or save the user_email with the codes
     for code in codes:
-        if is_code_used_from_google(code):
-            return jsonify({'error': f'Promo code {code} has already been used'}), 400
+        mark_code_as_used_in_db(code, user_email)  # Example function
 
-    write_codes_to_google(codes, user_id)
-    remove_used_from_google(codes)
+    return jsonify({'status': 'success', 'used': codes}), 200
 
-    return jsonify({"status": "success", "used": codes})
-
+# App entry point
 if __name__ == '__main__':
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port, debug=True)

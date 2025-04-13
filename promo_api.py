@@ -70,7 +70,8 @@ def mark_promo_codes_used():
     if not codes:
         return jsonify({'error': 'No codes provided'}), 400
 
-    user_email = "jordan"  # ✅ Hardcoded value
+    # Allow override, default to "jordan"
+    user_email = data.get('user_email', 'jordan')
 
     write_codes_to_google(codes, user_email)
     remove_used_from_google(codes)

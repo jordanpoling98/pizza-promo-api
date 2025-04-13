@@ -71,18 +71,16 @@ from flask import request, jsonify
 def mark_promo_codes_used():
     data = request.get_json()
     codes = data.get('codes', [])
-    user_email = data.get('user_email')  # <-- ✅ Get the email
+    user_email = data.get('user_email')
 
     if not codes:
         return jsonify({'error': 'No codes provided'}), 400
     if not user_email:
         return jsonify({'error': 'User ID (email) is required'}), 400
 
-    # ✅ Optional: log or save the user_email with the codes
-    for code in codes:
-        mark_code_as_used_in_db(code, user_email)  # Example function
-
+    # Mark the codes as used here...
     return jsonify({'status': 'success', 'used': codes}), 200
+
 
 # App entry point
 if __name__ == '__main__':
